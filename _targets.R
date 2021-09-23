@@ -12,7 +12,7 @@ source("1_fetch/src/get_site_data.R")
 source("3_visualize/src/map_sites.R")
 
 # Configuration
-states <- c('WI','MN','MI', 'IL')
+states <- c('WI','MN','MI', 'IL', 'IN', 'IA')
 parameter <- c('00060')
 
 # Targets
@@ -23,7 +23,8 @@ list(
   # TODO: PULL SITE DATA HERE
   tar_map(
     values = tibble(state_abb = states),
-    tar_target(nwis_data, get_site_data(oldest_active_sites, state_abb, parameter)),
+    tar_target(nwis_inventory, filter(oldest_active_sites, state_cd == state_abb)),
+    tar_target(nwis_data, get_site_data(nwis_inventory, state_abb, parameter)),
     # Insert step for tallying data here
     tar_target(count, tally(nwis_data)),
     # Insert step for plotting data here
