@@ -4,7 +4,7 @@ library(tarchetypes)
 library(tibble)
 
 options(tidyverse.quiet = TRUE)
-tar_option_set(packages = c("tidyverse", "dataRetrieval", "urbnmapr", "rnaturalearth", "cowplot", "lubridate", "leaflet", "leafpop", "htmlwidgets"))
+tar_option_set(packages = c("tidyverse", "dataRetrieval", "urbnmapr", "rnaturalearth", "cowplot", "lubridate", "vctrs", "leaflet", "leafpop", "htmlwidgets"))
 
 # Load functions needed by targets below
 source("1_fetch/src/find_oldest_sites.R")
