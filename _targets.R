@@ -12,6 +12,7 @@ source("1_fetch/src/get_site_data.R")
 source("2_process/src/tally_site_obs.R")
 source("3_visualize/src/map_sites.R")
 source("3_visualize/src/plot_site_data.R")
+source("3_visualize/src/plot_data_coverage.R")
 
 # Configuration
 states <- c('WI','MN','MI', 'IL', 'IN', 'IA')
@@ -39,6 +40,10 @@ list(
   mapped_by_state_targets,
 
   tar_combine(obs_tallies, mapped_by_state_targets[[3]], command = combine_obs_tallies(!!!.x)),
+
+  tar_target(data_coverage,
+             plot_data_coverage(obs_tallies, "3_visualize/out/data_coverage.png"),
+             format = "file"),
 
   # Map oldest sites
   tar_target(
