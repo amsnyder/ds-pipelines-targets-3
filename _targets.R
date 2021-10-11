@@ -18,23 +18,27 @@ states <- c('WI','MN','MI', 'IL', 'IN', 'IA')
 parameter <- c('00060')
 
 # Targets
+mapped_by_state_targets <- tar_map(
+  values = tibble(state_abb = states)%>%
+    mutate(state_plot_files = sprintf("3_visualize/out/timeseries_%s.png", state_abb)),
+  names = state_abb,
+  tar_target(nwis_inventory, filter(oldest_active_sites, state_cd == state_abb)),
+  tar_target(nwis_data, get_site_data(nwis_inventory, state_abb, parameter)),
+  # Insert step for tallying data here
+  tar_target(tally, tally_site_obs(nwis_data)),
+  # Insert step for plotting data here
+  tar_target(timeseries_png, plot_site_data(state_plot_files, nwis_data, parameter),
+             format = "file"),
+  unlist=FALSE
+)
+
 list(
   # Identify oldest sites
   tar_target(oldest_active_sites, find_oldest_sites(states, parameter)),
 
-  # TODO: PULL SITE DATA HERE
-  tar_map(
-    values = tibble(state_abb = states)%>%
-      mutate(state_plot_files = sprintf("3_visualize/out/timeseries_%s.png", state_abb)),
-    names = state_abb,
-    tar_target(nwis_inventory, filter(oldest_active_sites, state_cd == state_abb)),
-    tar_target(nwis_data, get_site_data(nwis_inventory, state_abb, parameter)),
-    # Insert step for tallying data here
-    tar_target(tally, tally_site_obs(nwis_data)),
-    # Insert step for plotting data here
-    tar_target(timeseries_png, plot_site_data(state_plot_files, nwis_data, parameter),
-               format = "file"),
-  ),
+  mapped_by_state_targets,
+
+  tar_combine(obs_tallies, mapped_by_state_targets[[3]], command = combine_obs_tallies(!!!.x)),
 
   # Map oldest sites
   tar_target(
