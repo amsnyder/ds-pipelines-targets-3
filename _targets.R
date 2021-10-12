@@ -25,14 +25,14 @@ mapped_by_state_targets <- tar_map(
   values = tibble(state_abb = states)%>%
     mutate(state_plot_files = sprintf("3_visualize/out/timeseries_%s.png", state_abb)),
   names = state_abb,
+  unlist=FALSE,
   tar_target(nwis_inventory, filter(oldest_active_sites, state_cd == state_abb)),
   tar_target(nwis_data, get_site_data(nwis_inventory, state_abb, parameter)),
   # Insert step for tallying data here
   tar_target(tally, tally_site_obs(nwis_data)),
   # Insert step for plotting data here
   tar_target(timeseries_png, plot_site_data(state_plot_files, nwis_data, parameter),
-             format = "file"),
-  unlist=FALSE
+             format = "file")
 )
 
 list(
@@ -41,17 +41,17 @@ list(
 
   mapped_by_state_targets,
 
-  tar_combine(obs_tallies, mapped_by_state_targets[[3]], command = combine_obs_tallies(!!!.x)),
+  tar_combine(obs_tallies, mapped_by_state_targets$tally, command = combine_obs_tallies(!!!.x)),
 
   tar_combine(
     summary_state_timeseries_csv,
-    mapped_by_state_targets[[4]],
+    mapped_by_state_targets$timeseries_png,
     command = summarize_targets('3_visualize/log/summary_state_timeseries.csv', !!!.x),
     format="file"
   ),
 
-  tar_target(data_coverage,
-             plot_data_coverage(obs_tallies, "3_visualize/out/data_coverage.png"),
+  tar_target(data_coverage_png,
+             plot_data_coverage(obs_tallies, "3_visualize/out/data_coverage.png", parameter),
              format = "file"),
 
   # Map oldest sites
@@ -61,5 +61,7 @@ list(
     format = "file"
   ),
 
-  tar_target(interactive_map, map_timeseries(oldest_active_sites, summary_state_timeseries_csv, "3_visualize/out/timeseries_map.html"))
+  tar_target(interactive_map_html,
+             map_timeseries(oldest_active_sites, summary_state_timeseries_csv, "3_visualize/out/timeseries_map.html"),
+             format = "file")
 )
