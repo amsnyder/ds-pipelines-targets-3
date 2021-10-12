@@ -11,5 +11,5 @@ tally_site_obs <- function(site_data) {
 }
 
 combine_obs_tallies <- function(...) {
-  vec_c(...)
+  bind_rows(...)
 }
