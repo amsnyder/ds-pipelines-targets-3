@@ -1,5 +1,5 @@
-summarize_targets <- function(ind_file, v) {
-  ind_tbl <- tar_meta(all_of(c(v))) %>%
+summarize_targets <- function(ind_file, filename_targets) {
+  ind_tbl <- tar_meta(all_of(filename_targets)) %>%
     select(tar_name = name, filepath = path, hash = data) %>%
     mutate(filepath = unlist(filepath))
 
