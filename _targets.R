@@ -4,7 +4,7 @@ library(tarchetypes)
 library(tibble)
 
 options(tidyverse.quiet = TRUE)
-tar_option_set(packages = c("tidyverse", "dataRetrieval", "urbnmapr", "rnaturalearth", "cowplot", "lubridate", "leaflet", "leafpop", "htmlwidgets"))
+tar_option_set(packages = c("tidyverse", "dataRetrieval", "urbnmapr", "rnaturalearth", "cowplot", "lubridate", "leaflet", "leafpop", "htmlwidgets", "retry"))
 
 # Load functions needed by targets below
 source("1_fetch/src/find_oldest_sites.R")
@@ -17,7 +17,10 @@ source("3_visualize/src/plot_data_coverage.R")
 source("3_visualize/src/map_timeseries.R")
 
 # Configuration
-states <- c('WI','MN','MI', 'IL', 'IN', 'IA')
+states <- c('AL','AZ','AR','CA','CO','CT','DE','DC','FL','GA','ID','IL','IN','IA',
+            'KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH',
+            'NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX',
+            'UT','VT','VA','WA','WV','WI','WY','AK','HI','GU','PR')
 parameter <- c('00060')
 
 # Targets
@@ -27,7 +30,9 @@ mapped_by_state_targets <- tar_map(
   names = state_abb,
   unlist=FALSE,
   tar_target(nwis_inventory, filter(oldest_active_sites, state_cd == state_abb)),
-  tar_target(nwis_data, get_site_data(nwis_inventory, state_abb, parameter)),
+  tar_target(nwis_data, retry(get_site_data(nwis_inventory, state_abb, parameter),
+                              when="Ugh, the internet data transfer failed!",
+                              max_tries=30)),
   # Insert step for tallying data here
   tar_target(tally, tally_site_obs(nwis_data)),
   # Insert step for plotting data here
